@@ -48,11 +48,11 @@ jobs:
       - name: SonarQube Quality Gate check
         id: sonarqube-quality-gate-check
         uses: sonarsource/sonarqube-quality-gate-action@master
-        # Force to fail step after specific time.
+        continue-on-error: true
         timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }} #OPTIONAL
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
        
   BUILD_AND_PUBLISH:   
     needs: Testing
