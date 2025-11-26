@@ -18,7 +18,7 @@ public class UserTest {
 	public static final Long EXPECTED_ID = 1L;
 	public static final int EXPECTED_SIZE = 1;
     public static final String EXPECTED_USERNAME = "Wahidkhan74";
-    public static final String EXPECTED_PASSWD = "Wahidkhan74";
+    public static final String EXPECTED_PASSWORD = "Wahidkhan74";
     public static final String EXPECTED_USEREMAIL = "XXXXX@gmail.com";
     private User user;
     @Before
@@ -48,7 +48,7 @@ public class UserTest {
     public void testUserDetailsHappyFlow() throws Exception {
     	Assert.assertEquals(EXPECTED_ID, user.getId());
         Assert.assertEquals(EXPECTED_USERNAME, user.getUsername());
-        Assert.assertEquals(EXPECTED_PASSWD, user.getPassword());
+        Assert.assertEquals(EXPECTED_PASSWORD, user.getPassword());
         Assert.assertEquals(EXPECTED_USEREMAIL, user.getUserEmail());
         Assert.assertEquals(EXPECTED_SIZE,user.getRoles().size());
 
