@@ -1,5 +1,8 @@
 name: vprofile actions
-on: workflow_dispatch
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
 env:
   AWS_REGION: us-east-2
   ECR_REPOSITORY: vprofileapp
