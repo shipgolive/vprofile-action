@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vpromq01
+  labels:
+    app: vpromq01
+spec:
+  selector:
+    matchLabels:
+      app: vpromq01
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: vpromq01
+    spec:
+      initContainers:
+      - name: vault-decrypt
+        image: hashicorp/vault:1.15.2
+        env:
+        - name: VAULT_ADDR
+          value: "http://vault.vault.svc.cluster.local:8200"
+        - name: VAULT_TOKEN
+          value: "root-token-123"
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          # Decrypt RMQ password directly using known encrypted value
+          ENCRYPTED="vault:v1:PkoyBJS0Nkn/vAMItSPJNFNmId1Caiz61KuWJ+HYAeS6CACn"
+          DECRYPTED=$(vault write -field=plaintext transit/decrypt/vprofile-key ciphertext="$ENCRYPTED")
+          echo "$DECRYPTED" | base64 -d > /shared/rmq-pass
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+      containers:
+      - name: vpromq01
+        image: rabbitmq
+        ports:
+        - name: vpromq01-port
+          containerPort: 15672
+        env: 
+        - name: RABBITMQ_DEFAULT_USER
+          value: "guest"
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          export RABBITMQ_DEFAULT_PASS=$(cat /shared/rmq-pass)
+          docker-entrypoint.sh rabbitmq-server
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+      volumes:
+      - name: shared-data
+        emptyDir: {}

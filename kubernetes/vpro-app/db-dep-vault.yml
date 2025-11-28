@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vprodb
+  labels:
+    app: vprodb
+spec:
+  selector:
+    matchLabels:
+      app: vprodb
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: vprodb
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "vprofile-role"
+        vault.hashicorp.com/agent-inject-secret-db-pass: "secret/data/vprofile"
+        vault.hashicorp.com/agent-inject-template-db-pass: |
+          {{- with secret "secret/data/vprofile" -}}
+          {{- $encrypted := .Data.data.db-pass -}}
+          {{- with secret "transit/decrypt/vprofile-key" "ciphertext"=$encrypted -}}
+          {{ .Data.plaintext | base64decode }}
+          {{- end -}}
+          {{- end -}}
+    spec:
+      serviceAccountName: vault-auth
+      containers:
+      - name: vprodb
+        image: mysql:8.0.33
+        ports:
+        - name: vprodb-port
+          containerPort: 3306
+        env:
+         - name: MYSQL_ROOT_PASSWORD
+           value: "file"
+        command: ["/bin/sh"]
+        args:
+          - -c
+          - |
+            export MYSQL_ROOT_PASSWORD=$(cat /vault/secrets/db-pass)
+            docker-entrypoint.sh mysqld
+        volumeMounts:
+        - name: vault-secrets
+          mountPath: /vault/secrets
+          readOnly: true
+        - name: db-data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: vault-secrets
+        emptyDir: {}
+      - name: db-data
+        emptyDir: {}
