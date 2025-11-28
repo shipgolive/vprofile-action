@@ -1,32 +1,5 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: vprodb
-  labels:
-    app: vprodb
-spec:
-  selector:
-    matchLabels:
-      app: vprodb
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: vprodb
-    spec:
-      containers:
-      - name: vprodb
-        image: vprofile/vprofiledb 
-        ports:
-        - name: vprodb-port
-          containerPort: 3306
-        env: 
-         - name: MYSQL_ROOT_PASSWORD
-           valueFrom:
-             secretKeyRef:
-               name: app-secret
-               key: db-pass
-#        env:
-#         - name: MYSQL_ROOT_PASSWORD
-#           value: "vprodbpass"
+# This file is replaced by db-dep-vault-fixed.yml with Vault Transit encryption
+# Original deployment now uses Vault encryption-as-a-service
+# Database password is encrypted with AES-256-GCM and decrypted at runtime
+# Image changed from vprofile/vprofiledb to mysql:8.0.33 for better compatibility
 
