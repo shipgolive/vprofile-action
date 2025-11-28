@@ -1,0 +1,19 @@
+# Replace your kubectl create secret command with this:
+
+# Option 1: Delete and recreate
+- name: Create ECR secret
+  run: |
+    kubectl delete secret regcred --ignore-not-found=true
+    kubectl create secret docker-registry regcred \
+      --docker-server=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com \
+      --docker-username=AWS \
+      --docker-password=$(aws ecr get-login-password --region ${{ env.AWS_REGION }})
+
+# Option 2: Use kubectl apply (idempotent)
+- name: Create ECR secret
+  run: |
+    kubectl create secret docker-registry regcred \
+      --docker-server=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com \
+      --docker-username=AWS \
+      --docker-password=$(aws ecr get-login-password --region ${{ env.AWS_REGION }}) \
+      --dry-run=client -o yaml | kubectl apply -f -
