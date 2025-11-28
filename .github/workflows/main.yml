@@ -69,7 +69,7 @@ jobs:
          registry: ${{ secrets.REGISTRY }}
          repo: ${{ env.ECR_REPOSITORY }}
          region: ${{ env.AWS_REGION }}
-         tags: latest,${{ github.run_number }}
+         tags: latest,${{ github.sha }}
          daemon_off: false
          dockerfile: ./Dockerfile
          context: ./
@@ -99,15 +99,7 @@ jobs:
           kubectl delete secret regcred --ignore-not-found=true
           kubectl create secret docker-registry regcred --docker-server=${{ secrets.REGISTRY }} --docker-username=AWS --docker-password=$(aws ecr get-login-password) 
 
-      - name: Deploy Helm
-        uses: bitovi/github-actions-deploy-eks-helm@v1.2.8
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-          cluster-name: ${{ env.EKS_CLUSTER }}
-          #config-files: .github/values/dev.yaml
-          chart-path: helm/vprofilecharts
-          namespace: default
-          values: appimage=${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }},apptag=${{ github.run_number }},nodeSelector.role=applications
-          name: vprofile-stack    
+      - name: Update ArgoCD Application
+        run: |
+          kubectl patch application vprofile-app -n argocd --type='merge' -p='{"spec":{"source":{"helm":{"parameters":[{"name":"appimage","value":"${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }}"},{"name":"apptag","value":"${{ github.sha }}"}]}}}}'
+          kubectl annotate application vprofile-app -n argocd argocd.argoproj.io/refresh=normal --overwrite    
