@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vprodb
+  labels:
+    app: vprodb
+spec:
+  selector:
+    matchLabels:
+      app: vprodb
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: vprodb
+    spec:
+      initContainers:
+      - name: vault-decrypt
+        image: hashicorp/vault:1.15.2
+        env:
+        - name: VAULT_ADDR
+          value: "http://vault.vault.svc.cluster.local:8200"
+        - name: VAULT_TOKEN
+          value: "root-token-123"
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          # Decrypt DB password directly using known encrypted value
+          ENCRYPTED="vault:v1:eGihNs/JERWTeIokB1XCTLXTom1ezUZ74Qo6loUe/yNSXBdq"
+          DECRYPTED=$(vault write -field=plaintext transit/decrypt/vprofile-key ciphertext="$ENCRYPTED")
+          echo "$DECRYPTED" | base64 -d > /shared/db-pass
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+      containers:
+      - name: vprodb
+        image: mysql:8.0.33
+        ports:
+        - name: vprodb-port
+          containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "placeholder"
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          export MYSQL_ROOT_PASSWORD=$(cat /shared/db-pass)
+          docker-entrypoint.sh mysqld
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+        - name: db-data
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: shared-data
+        emptyDir: {}
+      - name: db-data
+        emptyDir: {}
