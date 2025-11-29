@@ -74,7 +74,24 @@ jobs:
          dockerfile: ./Dockerfile
          context: ./
 
+  SECURITY_SCAN:
+    needs: BUILD_AND_PUBLISH
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
   DeployToEKS:
+    needs: SECURITY_SCAN
     needs: BUILD_AND_PUBLISH
     runs-on: ubuntu-latest
     steps:
@@ -102,5 +119,21 @@ jobs:
       - name: Update ArgoCD Application
         run: |
           kubectl patch application vprofile-app -n argocd --type='merge' -p='{"spec":{"source":{"helm":{"parameters":[{"name":"appimage","value":"${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }}"},{"name":"apptag","value":"${{ github.sha }}"}]}}}}'
-          kubectl annotate application vprofile-app -n argocd argocd.argoproj.io/refresh=normal --overwrite    
-          #
+          kubectl annotate application vprofile-app -n argocd argocd.argoproj.io/refresh=normal --overwrite
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Release v${{ github.run_number }}
+          body: |
+            Deployed to EKS with image: ${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+            
+            Changes:
+            - Automated deployment via GitHub Actions
+            - Security scan completed with Trivy
+            - Quality gate passed
+          draft: false
+          prerelease: false
