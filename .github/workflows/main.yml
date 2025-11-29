@@ -125,6 +125,45 @@ jobs:
           kubectl delete secret regcred --ignore-not-found=true
           kubectl create secret docker-registry regcred --docker-server=${{ secrets.REGISTRY }} --docker-username=AWS --docker-password=$(aws ecr get-login-password) 
 
+      - name: Setup Vault Secrets
+        run: |
+          export VAULT_ADDR="http://aa0f32b0720c6422ba63eadd3b2fc4e5-874159703.us-east-2.elb.amazonaws.com:8200"
+          export VAULT_TOKEN="${{ secrets.VAULT_ROOT_TOKEN }}"
+          
+          # Enable transit and KV engines
+          vault secrets enable -path=transit transit || true
+          vault secrets enable -path=secret kv-v2 || true
+          
+          # Create encryption key
+          vault write -f transit/keys/vprofile-key || true
+          
+          # Encrypt and store DB password
+          DB_ENCRYPTED=$(echo -n "${{ secrets.DB_PASSWORD }}" | base64 | vault write -field=ciphertext transit/encrypt/vprofile-key plaintext=-)
+          vault kv put secret/vprofile db-pass="$DB_ENCRYPTED"
+          
+          # Encrypt and store RMQ password
+          RMQ_ENCRYPTED=$(echo -n "${{ secrets.RMQ_PASSWORD }}" | base64 | vault write -field=ciphertext transit/encrypt/vprofile-key plaintext=-)
+          vault kv patch secret/vprofile rmq-pass="$RMQ_ENCRYPTED"
+          
+          # Create policy
+          vault policy write vprofile-policy - <<EOF
+          path "secret/data/vprofile" {
+            capabilities = ["read"]
+          }
+          path "transit/decrypt/vprofile-key" {
+            capabilities = ["update"]
+          }
+          EOF
+          
+          # Setup Kubernetes auth
+          vault auth enable kubernetes || true
+          kubectl create serviceaccount vault-auth --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy Vault-integrated DB and RMQ
+        run: |
+          kubectl apply -f kubernetes/vpro-app/db-dep-vault-k8s.yml
+          kubectl apply -f kubernetes/vpro-app/rmq-dep-vault-k8s.yml
+
       - name: Update ArgoCD Application
         run: |
           kubectl patch application vprofile-app -n argocd --type='merge' -p='{"spec":{"source":{"helm":{"parameters":[{"name":"appimage","value":"${{ secrets.REGISTRY }}/${{ env.ECR_REPOSITORY }}"},{"name":"apptag","value":"${{ github.sha }}"}]}}}}'
