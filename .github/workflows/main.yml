@@ -92,7 +92,6 @@ jobs:
 
   DeployToEKS:
     needs: SECURITY_SCAN
-    needs: BUILD_AND_PUBLISH
     runs-on: ubuntu-latest
     steps:
       - name: Code checkout
