@@ -10,7 +10,7 @@
   z-index: 20;
   margin-left: -15px;
   margin-right: -15px;
-  //background-color:#1C3B47;
+  /* background-color:#1C3B47; */
 }
 .navbar-custom {
     background-color: #1C3B47;
@@ -88,7 +88,7 @@ overflow: hidden;
 body {
     background-color: #e8e8e8;
 }
-//contact forms
+/* contact forms */
 
 .container {
 	max-width:700px;
@@ -208,7 +208,7 @@ blockquote{
 }
 
 blockquote::before{
-  //content: "\201C"; /*Unicode for Left Double Quote*/
+  /* content: "\201C"; */ /*Unicode for Left Double Quote*/
   
   /*Font*/
   font-family: Verdana,sans-serif;

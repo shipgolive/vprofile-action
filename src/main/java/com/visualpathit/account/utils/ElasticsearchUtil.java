@@ -15,7 +15,7 @@ public class ElasticsearchUtil {
 	
 	private static Components object;
     @Autowired
-    public void setComponents(Components object){
+    public static void setComponents(Components object){
     	ElasticsearchUtil.object = object;    	
     	
     }

@@ -21,6 +21,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 /**{@author imrant}*/
 @Controller
 public class UserController {
+    private static final String SEPARATOR_LINE = "--------------------------------------------";
+    
     @Autowired
     private UserService userService;
 
@@ -96,9 +98,9 @@ public class UserController {
     		if( id != null && MemcachedUtils.memcachedGetData(id)!= null){    			
     			User userData =  MemcachedUtils.memcachedGetData(id);
     			Result ="Data is From Cache";
-    			System.out.println("--------------------------------------------");
+    			System.out.println(SEPARATOR_LINE);
     			System.out.println("Data is From Cache !!");
-    			System.out.println("--------------------------------------------");
+    			System.out.println(SEPARATOR_LINE);
     			System.out.println("Father ::: "+userData.getFatherName());
     			model.addAttribute("user", userData);
     			model.addAttribute("Result", Result);
@@ -109,9 +111,9 @@ public class UserController {
 	    		if(Result == null ){
 	    			Result ="Memcached Connection Failure !!";
 	    		}
-	    		System.out.println("--------------------------------------------");
+	    		System.out.println(SEPARATOR_LINE);
     			System.out.println("Data is From Database");
-    			System.out.println("--------------------------------------------");
+    			System.out.println(SEPARATOR_LINE);
 		        System.out.println("Result ::: "+ Result);	       
 		        model.addAttribute("user", user);
 		        model.addAttribute("Result", Result);

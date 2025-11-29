@@ -41,7 +41,7 @@ public class User implements Serializable {
     
     
     /** the roles field !*/
-    private Set<Role> roles;
+    private transient Set<Role> roles;
     /** {@inheritDoc}} !*/
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

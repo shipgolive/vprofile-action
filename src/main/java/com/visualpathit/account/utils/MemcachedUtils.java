@@ -13,10 +13,11 @@ import com.visualpathit.account.model.User;
 import net.spy.memcached.MemcachedClient;
 @Service
 public class MemcachedUtils {
+    private static final String SEPARATOR_LINE = "--------------------------------------------";
 	
 	private static Components object;
     @Autowired
-    public void setComponents(Components object){
+    public static void setComponents(Components object){
     	MemcachedUtils.object = object;
     }
     public static String memcachedSetData(User user,String key){    	
@@ -24,9 +25,9 @@ public class MemcachedUtils {
     	int expireTime =  900;
     	try{
     			MemcachedClient mactiveClient = memcachedConnection();
-    			System.out.println("--------------------------------------------");
+    			System.out.println(SEPARATOR_LINE);
     			System.out.println("Client is ::"+ mactiveClient.getStats());
-    			System.out.println("--------------------------------------------");
+    			System.out.println(SEPARATOR_LINE);
 	            Future future = mactiveClient.set(key,expireTime, user);	        	         
 	     	    System.out.println("set status:" + future.get());
 	     	    Result =" Data is From DB and Data Inserted In Cache !!";
@@ -43,9 +44,9 @@ public class MemcachedUtils {
     	User userData = null;
     	try{
     			MemcachedClient mclient = memcachedConnection();
-    			System.out.println("--------------------------------------------");
+    			System.out.println(SEPARATOR_LINE);
     			System.out.println("Client Status :: "+mclient.getStats());
-    			System.out.println("--------------------------------------------");
+    			System.out.println(SEPARATOR_LINE);
 	            userData = (User) mclient.get(key);
 	     	    System.out.println("user value in cache - " + mclient.get(key));
 	     	    Result =" Data Retrieval From Cache !!";
@@ -75,26 +76,26 @@ public class MemcachedUtils {
 	    		if(port == null){
     				System.out.println("Port::"+ port);
     				mcconn.shutdown();
-    				System.out.println("--------------------------------------------");
+    				System.out.println(SEPARATOR_LINE);
 		       		System.out.println("Connection Failure By Active Host ::" + activeHost);
-		       		System.out.println("--------------------------------------------");
+		       		System.out.println(SEPARATOR_LINE);
 		       		mcconn = null;
 		       		active =false;
 		       		return mcconn = standByMemcachedConn();
     			}
     			if(!port.isEmpty()){
-	    			System.out.println("--------------------------------------------");
+	    			System.out.println(SEPARATOR_LINE);
 		    		System.out.println("Connection to server sucessfull for active Host ::"+activeHost);
-		            System.out.println("--------------------------------------------");
+		            System.out.println(SEPARATOR_LINE);
 		            active =true;
 		            return mcconn;
 	    		}
 	    	}else if(!activeHost.isEmpty() && !activePort.isEmpty() && !active){
 	    		return mcconn = standByMemcachedConn();
 	    	}else {
-	    		 System.out.println("--------------------------------------------");
+	    		 System.out.println(SEPARATOR_LINE);
 	    		 System.out.println("Connection to Failure Due to Incorrect or Empty Host:: ");
-	    		 System.out.println("--------------------------------------------");
+	    		 System.out.println(SEPARATOR_LINE);
 	    	}
 	    	}
     	catch (Exception e) {
@@ -115,15 +116,15 @@ public class MemcachedUtils {
     			port = mcconn.getStats().get(innerKey).get(key);    		
     		}
     		if(!port.isEmpty()){
-	    		System.out.println("--------------------------------------------");
+	    		System.out.println(SEPARATOR_LINE);
 	    		System.out.println("Connection to server sucessful by StandBy Host::" + standByHost);
-	            System.out.println("--------------------------------------------");
+	            System.out.println(SEPARATOR_LINE);
 	            return mcconn;
     		}else {
 	    		 mcconn.shutdown();
-	       		 System.out.println("--------------------------------------------");
+	       		 System.out.println(SEPARATOR_LINE);
 	       		 System.out.println("Connection Failure By StandBy Host ::" +standByHost);
-	       		 System.out.println("--------------------------------------------");
+	       		 System.out.println(SEPARATOR_LINE);
     		}
     	}
     	}catch (Exception e) {
