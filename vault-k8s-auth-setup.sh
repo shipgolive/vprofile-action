@@ -1,8 +1,10 @@
 #!/bin/bash
 # Setup Kubernetes authentication for Vault
 
-export VAULT_ADDR="http://ad8d1589c834542a3a0778944c8f03c4-87591684.us-east-2.elb.amazonaws.com:8200"
-export VAULT_TOKEN=root-token-123
+export VAULT_ADDR="http://aa0f32b0720c6422ba63eadd3b2fc4e5-874159703.us-east-2.elb.amazonaws.com:8200"
+echo "Enter Vault root token:"
+read -s VAULT_TOKEN
+export VAULT_TOKEN
 
 echo "🔐 Setting up Kubernetes authentication for Vault..."
 
