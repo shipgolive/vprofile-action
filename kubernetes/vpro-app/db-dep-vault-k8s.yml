@@ -14,18 +14,21 @@ spec:
       labels:
         app: vprodb
     spec:
+      serviceAccountName: vault-auth
       initContainers:
       - name: vault-decrypt
         image: hashicorp/vault:1.15.2
         env:
         - name: VAULT_ADDR
-          value: "http://a9e7a7d6abc404b6da4b2fee1f678a2f-32623827.us-east-2.elb.amazonaws.com:8200"
-        - name: VAULT_TOKEN
-          value: "root-token-123"
+          value: "http://a366415017511462d974e014cdcec956-1263281851.us-east-2.elb.amazonaws.com:8200"
         command: ["/bin/sh"]
         args:
         - -c
         - |
+          # Authenticate with Kubernetes
+          VAULT_TOKEN=$(vault write -field=token auth/kubernetes/login role=vprofile-role jwt=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token))
+          export VAULT_TOKEN
+          
           # Get encrypted password from Vault KV and decrypt
           ENCRYPTED=$(vault kv get -field=db-pass secret/vprofile)
           DECRYPTED=$(vault write -field=plaintext transit/decrypt/vprofile-key ciphertext="$ENCRYPTED")

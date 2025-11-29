@@ -9,10 +9,12 @@ import com.visualpathit.account.beans.Components;
 public class RabbitMqUtil {
   private static Components object;
   
-  public RabbitMqUtil() {}
+  public RabbitMqUtil() {
+    // Default constructor for Spring dependency injection
+  }
   
   @Autowired
-  public void setComponents(Components object) {
+  public static void setComponents(Components object) {
 	  RabbitMqUtil.object = object;
   }
   

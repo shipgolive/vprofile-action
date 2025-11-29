@@ -31,6 +31,8 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 @Controller
 public class ElasticSearchController {
+    private static final String ELASTICSEARCH_RESULT_VIEW = "elasticeSearchRes";
+    
 	@Autowired
     private UserService userService;
     
@@ -65,7 +67,7 @@ public class ElasticSearchController {
         result="Users";
     	}
     	model.addAttribute(result);
-        return "elasticeSearchRes";
+        return ELASTICSEARCH_RESULT_VIEW;
         		
     }
 
@@ -76,7 +78,7 @@ public class ElasticSearchController {
         
         model.addAttribute("res", getResponse.getSource().get("name"));
        
-        return "elasticeSearchRes";
+        return ELASTICSEARCH_RESULT_VIEW;
     }
     /*@RequestMapping(value = "/get_user_list",  method = RequestMethod.GET)
     public @ResponseBody List getTagList(@RequestParam("term") String query) {
@@ -106,11 +108,11 @@ public class ElasticSearchController {
             UpdateResponse updateResponse = ElasticsearchUtil.trannsportClient().update(updateRequest).get();
             System.out.println(updateResponse.status());
             model.addAttribute("res", updateResponse.status());
-            return "elasticeSearchRes";
+            return ELASTICSEARCH_RESULT_VIEW;
         } catch (InterruptedException | ExecutionException e) {
             System.out.println(e);
         }
-        return "elasticeSearchRes";
+        return ELASTICSEARCH_RESULT_VIEW;
     }
     @RequestMapping(value="/rest/users/delete/{id}", method=RequestMethod.GET)
     public String delete(@PathVariable final String id,final Model model) {
@@ -118,7 +120,7 @@ public class ElasticSearchController {
         DeleteResponse deleteResponse =ElasticsearchUtil.trannsportClient().prepareDelete("employee", "id", id).get();
         System.out.println(deleteResponse.getResult().toString());
         model.addAttribute("res", deleteResponse.getResult().toString());
-        return "elasticeSearchRes";
+        return ELASTICSEARCH_RESULT_VIEW;
     }
     /*public void contextMapping() throws IOException{    	   	
 		String json ="{"

@@ -24,12 +24,31 @@ kubectl annotate svc prometheus-server -n monitoring service.beta.kubernetes.io/
 kubectl annotate svc alertmanager -n monitoring service.beta.kubernetes.io/aws-load-balancer-source-ranges="$NEW_IP/32" --overwrite
 kubectl annotate svc loki -n monitoring service.beta.kubernetes.io/aws-load-balancer-source-ranges="$NEW_IP/32" --overwrite
 kubectl annotate svc argocd-server -n argocd service.beta.kubernetes.io/aws-load-balancer-source-ranges="$NEW_IP/32" --overwrite
-kubectl annotate svc vault-ui -n vault service.beta.kubernetes.io/aws-load-balancer-source-ranges="$NEW_IP/32" --overwrite
+kubectl annotate svc vault-persistent-ui -n vault service.beta.kubernetes.io/aws-load-balancer-source-ranges="$NEW_IP/32" --overwrite
+
+echo "🔐 Setting up Vault Transit encryption..."
+# Ensure Vault Transit is configured
+export VAULT_ADDR="http://a9e7a7d6abc404b6da4b2fee1f678a2f-32623827.us-east-2.elb.amazonaws.com:8200"
+export VAULT_TOKEN=root-token-123
+
+# Configure Vault (idempotent - won't fail if already exists)
+vault secrets enable transit 2>/dev/null || echo "Transit already enabled"
+vault write -f transit/keys/vprofile-key 2>/dev/null || echo "Key already exists"
+vault secrets enable -path=secret kv-v2 2>/dev/null || echo "KV already enabled"
+vault kv put secret/vprofile db-pass="vault:v1:i8aNOYhzjjoeKf2rDcGG556JQnfSFFqHSn88+VYG5QWqL6OD" rmq-pass="vault:v1:8QOvVbf/OqH8pbqJn/IJArjzR0B58T1dKAqRr6RQWbneh/5f" 2>/dev/null || echo "Secrets already stored"
+
+# Check if Vault-integrated pods are running
+kubectl get pods -l app=vprodb,app=vpromq01 -o wide
 
 echo "📊 Checking cluster status..."
 kubectl get nodes
-kubectl get pods --all-namespaces | grep -E "(monitoring|argocd|vault)" | head -10
+kubectl get pods --all-namespaces | grep -E "(monitoring|argocd|vault|vprodb|vpromq01)" | head -15
+
+echo "🔑 Vault Transit Status:"
+echo "Database & RabbitMQ using encrypted passwords from Vault"
+echo "Vault UI: http://a9e7a7d6abc404b6da4b2fee1f678a2f-32623827.us-east-2.elb.amazonaws.com:8200"
 
 echo "✅ Cluster startup complete!"
 echo "🌐 All services accessible from IP: $NEW_IP"
+echo "🔐 Vault encryption-as-a-service: ACTIVE"
 echo "⏰ Wait 3-5 minutes for all services to be fully ready"
